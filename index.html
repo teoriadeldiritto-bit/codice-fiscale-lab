@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Codice Fiscale Lab</title>
+<style>
+*{box-sizing:border-box}body{font:16px system-ui;background:#f2f6fc;color:#18283d;margin:0}main{max-width:850px;margin:40px auto;padding:20px}h1{font-size:2.5rem;margin-bottom:0}p{color:#52637b;line-height:1.6}.card{background:white;border:1px solid #dce5f0;border-radius:18px;padding:26px;box-shadow:0 8px 25px #15284412}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}label{display:block;font-weight:650;margin-bottom:7px}input,select{width:100%;padding:12px;font:inherit;border:1px solid #b9c7d8;border-radius:9px}button{background:#205fc4;color:white;border:0;padding:13px 20px;border-radius:9px;font:inherit;font-weight:bold;cursor:pointer;margin-top:22px}#result{display:none;background:#eaf2ff;border-radius:12px;padding:22px;margin-top:22px}#code{font-size:clamp(1.1rem,4vw,2rem);font-weight:800;letter-spacing:.06em;overflow-wrap:anywhere}.parts{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}.parts span{background:white;padding:10px;border-radius:8px;text-align:center;flex:1;min-width:95px}.parts small{display:block;color:#53647c}#error{color:#a11928;font-weight:bold}@media(max-width:600px){.grid{grid-template-columns:1fr}main{margin:10px auto}}
+</style>
+<main><h1>Codice Fiscale Lab</h1><p>Laboratorio didattico: scopri come un algoritmo costruisce un codice fiscale teorico.</p>
+<div class="card"><form id="form"><div class="grid">
+<div><label for="nome">Nome</label><input id="nome" value="Mario" required></div>
+<div><label for="cognome">Cognome</label><input id="cognome" value="Rossi" required></div>
+<div><label for="data">Data di nascita</label><input id="data" type="date" value="1990-03-15" required></div>
+<div><label for="sesso">Sesso per il calcolo</label><select id="sesso"><option value="M">Maschile</option><option value="F">Femminile</option></select></div>
+<div><label for="comune">Comune di nascita</label><select id="comune"><option value="H501">Roma</option><option value="F205">Milano</option><option value="F839">Napoli</option><option value="L219">Torino</option><option value="D612">Firenze</option><option value="A944">Bologna</option><option value="G273">Palermo</option><option value="D969">Genova</option><option value="A662">Bari</option><option value="L736">Venezia</option></select></div>
+</div><button>Calcola codice fiscale</button><p id="error" role="alert"></p></form>
+<div id="result"><div>CODICE GENERATO</div><div id="code"></div><div id="parts" class="parts"></div></div></div>
+<p>⚠️ Demo didattica, non uno strumento ufficiale. Sono supportati solo i comuni elencati; non sono gestiti omocodia e casi storici. Usa dati inventati. Il calcolo avviene nel browser.</p></main>
+<script>
+const cons='BCDFGHJKLMNPQRSTVWXYZ',vowels='AEIOU',months='ABCDEHLMPRST',odd=[1,0,5,7,9,13,15,17,19,21,2,4,18,20,11,3,6,8,12,14,16,10,22,25,24,23];
+function clean(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z]/g,'')}
+function groups(s){s=clean(s);return [[...s].filter(c=>cons.includes(c)).join(''),[...s].filter(c=>vowels.includes(c)).join('')]}
+function surname(s){let [c,v]=groups(s);return(c+v+'XXX').slice(0,3)}
+function name(s){let [c,v]=groups(s);return c.length>=4?c[0]+c[2]+c[3]:(c+v+'XXX').slice(0,3)}
+function date(s,sex){let [y,m,d]=s.split('-').map(Number),dt=new Date(Date.UTC(y,m-1,d));if(!y||dt.getUTCFullYear()!==y||dt.getUTCMonth()!==m-1||dt.getUTCDate()!==d)throw Error('Data non valida');return String(y).slice(-2)+months[m-1]+String(d+(sex==='F'?40:0)).padStart(2,'0')}
+function check(s){let sum=0;for(let i=0;i<s.length;i++){let x=s[i],n=/\d/.test(x)?Number(x):x.charCodeAt(0)-65;sum+=i%2===0?odd[n]:n}return String.fromCharCode(65+sum%26)}
+function calculate(){let n=document.getElementById('nome').value,c=document.getElementById('cognome').value;if(!clean(n)||!clean(c))throw Error('Nome o cognome non valido');let parts=[surname(c),name(n),date(document.getElementById('data').value,document.getElementById('sesso').value),document.getElementById('comune').value];parts.push(check(parts.join('')));return parts}
+function show(){try{let p=calculate();document.getElementById('code').textContent=p.join('');document.getElementById('parts').innerHTML='';['Cognome','Nome','Data e sesso','Comune','Controllo'].forEach((label,i)=>{let span=document.createElement('span'),small=document.createElement('small'),b=document.createElement('b');small.textContent=label;b.textContent=p[i];span.append(small,b);document.getElementById('parts').append(span)});document.getElementById('result').style.display='block';document.getElementById('error').textContent=''}catch(e){document.getElementById('error').textContent=e.message;document.getElementById('result').style.display='none'}}
+document.getElementById('form').addEventListener('submit',e=>{e.preventDefault();show()});show();
+</script></html>
